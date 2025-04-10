@@ -1,9 +1,8 @@
-
-
 class Prompt(object):
     @staticmethod
-    def technical_drawing_extraction_prompt(image_path: str, resized_width: int = 3840, 
-                                            resized_height: int = 2160):
+    def technical_drawing_extraction_prompt(
+        image_path: str, resized_width: int = 3840, resized_height: int = 2160
+    ):
 
         prompt = [
             {
@@ -12,7 +11,7 @@ class Prompt(object):
                     {
                         "type": "image",
                         "image": image_path,
-                        "resized_height":  resized_height,
+                        "resized_height": resized_height,
                         "resized_width": resized_width,
                     },
                     {
