@@ -1,6 +1,9 @@
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import torch
+from PIL import Image
+import numpy as np
+from typing import Union
 
 
 class TechnicalDrawingExtractor:
@@ -28,10 +31,21 @@ class TechnicalDrawingExtractor:
             max_pixels=max_pixels,
             use_fast=use_fast,
         )
-        
+
     @staticmethod
-    def format_response(response: str):
-        raise NotImplementedError
+    def get_image_dimension(image_path: Union[str, np.ndarray]) -> tuple[int, int]:
+        """
+        Get the dimensions of the image.
+        :param image_path: Path to the image file or numpy array of the image.
+        :return: Tuple containing width and height of the image.
+        """
+        if isinstance(image_path, str):
+            with Image.open(image_path) as img:
+                width, height = img.size
+        else:
+            height, width = image_path.shape[:2]
+
+        return width, height
 
     def run(self, prompt: list[dict], max_new_tokens: int = 512) -> str:
 
