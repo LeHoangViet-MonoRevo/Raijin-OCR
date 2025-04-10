@@ -1,1 +1,64 @@
-images/
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Caches and temporary files
+.cache/
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Test and coverage tools
+*.coverage
+*.cover
+.coverage.*
+.coveragerc
+.hypothesis/
+.tox/
+.mypy_cache/
+.pytest_cache/
+.nox/
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Packaging
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Database and data artifacts
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter and notebook metadata
+.ipynb_checkpoints/
+
+# PyInstaller
+*.spec
+
+# VS Code and IDEs
+.vscode/
+.idea/
+
+# Custom project folders
+images/  # if you don't want images tracked
+
+# Mac/Linux/Windows OS files
+.DS_Store
+Thumbs.db
+
+
+# Images and other media
+/images/
