@@ -9,8 +9,8 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
     img_dirs = glob.glob("./images/*")
-    model_name = "Qwen/Qwen2.5-VL-3B-Instruct"
-    dtype = torch.bfloat16
+    model_name = "Qwen/Qwen2.5-VL-3B-Instruct-AWQ"
+    dtype = torch.float16
     attn_implementation = "flash_attention_2"
     device_map = "cuda:1"
     min_pixels = 512 * 28 * 28
@@ -27,7 +27,7 @@ if __name__ == "__main__":
         use_fast=use_fast,
     )
 
-    output_txt_path = "extraction_results.txt"
+    output_txt_path = "extraction_results_3B_AWQ.txt"
 
     with open(output_txt_path, "w", encoding="utf-8") as f:
         for img_dir in tqdm(img_dirs):
