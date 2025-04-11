@@ -53,3 +53,37 @@ class Prompt(object):
         ]
 
         return prompt
+
+
+class OutputFormat(object):
+    data = {
+        "ocr_product_code": "",
+        "ocr_product_name": "",
+        "ocr_drawing_number": "",
+        "ocr_drawing_issuer": "",
+        "material_type": {"material_code": "", "material_type": ""},
+        "required_precision": {
+            "tolerance_grade": "PRECISION_GRADE",
+            "dimensional_tolerance": "GENERAL_TOLERANCE",
+        },
+        "product_shape": {"shape": "OTHERS", "dimension": "0x0x0"},
+        "processing_content": {
+            "processing_surface": 0,
+            "processing_locations": 0,
+            "number_of_special_processing_locations": 0,
+        },
+        "lathe_processing_content": {
+            "processing_surface": 0,
+            "processing_locations": 0,
+            "number_of_special_processing_locations": 0,
+        },
+        "surface_roughness": "",
+        "polishing": "",
+        "surface_treatment": {"instruction": "NO", "content": ""},
+        "heat_treatment": {"instruction": "NO", "content": ""},
+        "painting": "NO",
+    }
+
+if __name__ == "__main__":
+    output = OutputFormat.data
+    print(f"Output: {output}")
