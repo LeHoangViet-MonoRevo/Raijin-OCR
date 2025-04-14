@@ -60,10 +60,15 @@ class OCRPostProcessor:
     def __init__(self):
         pass
 
+    def strip_wrappers(self, val):
+        # Remove common wrapping characters like [], (), {}, ""
+        return re.sub(r"^[\[\(\{\"\']+|[\]\)\}\"\']+$", "", val.strip())
+
     def clean_value(self, val, key=None):
         if not val:
             return ""
 
+        val = self.strip_wrappers(val)
         val = val.strip()
         val_lower = val.lower()
         key_lower = key.lower() if key else ""
@@ -90,6 +95,7 @@ class OCRPostProcessor:
         if not value:
             return ""
 
+        value = self.strip_wrappers(value)
         value = value.replace("×", "x").replace(" ", "").strip()
 
         if value.startswith("⌀"):
@@ -210,24 +216,20 @@ class OCRPostProcessor:
 
 if __name__ == "__main__":
     raw_output = """
-                ```json
-                {
-                "Product name": "051AGRA-50A",
-                "Product code": "051AGRA-50A",
-                "Material code": "SUS304",
-                "Material type": "stainless steel",
-                "Customer": "SHIMANO REEL SEC.",
-                "Heat treatment": "normalizing",
-                "Surface treatment": "None of the above",
-                "Shape of object": "round",
-                "Dimension of object": "10x⌀18",
-                "Tolerance grade": "Medium grade",
-                "Dimensional tolerance": "±0.1",
-                "Polishing": "Yes",
-                "Painting": "Yes",
-                "Surface roughness": "3.2"
-                }
-                ```
+                Product name: 芯棒NO.5-2 76
+                Product code: [C3604]
+                Material code: [JIS B 0024]
+                Material type: [stainless steel]
+                Customer: [MTEC]
+                Heat treatment: [None of the above]
+                Surface treatment: [None of the above]
+                Shape of object: angle
+                Dimension of object: [⌀30x150]
+                Tolerance grade: [Medium grade]
+                Dimensional tolerance: [±0.01]
+                Polishing: [Yes]
+                Painting: [Yes]
+                Surface roughness: [G]
     """
     processor = OCRPostProcessor()
     parsed_output = processor.parse_model_output(raw_output)
