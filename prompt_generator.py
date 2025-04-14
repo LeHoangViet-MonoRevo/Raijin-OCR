@@ -17,41 +17,29 @@ class Prompt(object):
                     {
                         "type": "text",
                         "text": (
-                            "Analyze the provided technical drawing, which may contain text in English and Japanese.\n\n"
-                            "Your task is to accurately extract the following information from the image:\n"
-                            "1. Product name\n"
-                            "2. Product code\n"
-                            "3. Material code\n"
-                            "4. Material type (if identifiable, classify as: stainless steel, iron, aluminum, casting, brass, copper)\n"
-                            "5. Customer\n"
-                            "6. Heat treatment (classify if present into: quenching, high-frequency quenching, tempering, normalizing, carburizing, vacuum heat treatment, or 'None of the above')\n"
-                            "7. Surface treatment (classify if present into: anodizing, non-electrolytic plating, black dyeing or blackening, phosphate manganese coating, trivalent chromate (ZMC3), hard chrome plating, or 'None of the above')\n"
-                            "8. Shape of object (classify as: round, angle, plate, or others based on the drawing\n"
-                            "9. Dimension of object (e.g., width × length × height or diameter × length)\n"
-                            "10. Tolerance grade (公差等级) — classify into: Fine grade, Medium grade, Coarse grade, Very coarse grade, or Not selected\n"
-                            "11. Dimensional tolerance (尺寸公差) — numerical format like general tolerance, ±0.1, ±0.01, ±0.001\n"
-                            "12. Polishing (Yes or No)\n"
-                            "13. Painting (Yes or No)\n"
-                            "14. Surface roughness (classify if available: G, 0.8, 1.6, 3.2)\n\n"
-                            "If any of these fields are missing in the image, leave the corresponding entry blank. "
-                            "Do not make assumptions or generate content that is not explicitly visible in the image.\n\n"
-                            "Please return the extracted information in the following table format:\n\n"
-                            "| Field                | Extracted Value                      |\n"
-                            "|----------------------|--------------------------------------|\n"
-                            "| Product name         |                                      |\n"
-                            "| Product code         |                                      |\n"
-                            "| Material code        |                                      |\n"
-                            "| Material type        |                                      |\n"
-                            "| Customer             |                                      |\n"
-                            "| Heat treatment       |                                      |\n"
-                            "| Surface treatment    |                                      |\n"
-                            "| Shape of object      |                                      |\n"
-                            "| Dimension of object  |                                      |\n"
-                            "| Tolerance grade      |                                      |\n"
-                            "| Dimensional tolerance|                                      |\n"
-                            "| Polishing            |                                      |\n"
-                            "| Painting             |                                      |\n"
-                            "| Surface roughness    |                                      |"
+                            """
+                                    Analyze the provided technical drawing, which may contain text in English and Japanese.
+
+                                    Your task is to accurately extract the following information from the image.
+                                    For each field, provide the extracted value exactly as written in the image, without making assumptions. If the field is not present or unclear, leave it blank.
+
+                                    Return your output in the following key-value format, using one line per field:                                    
+
+                                    Product name: [value]
+                                    Product code: [value]
+                                    Material code: [value]
+                                    Material type: [value]  # Choose from: stainless steel, iron, aluminum, casting, brass, copper
+                                    Customer: [value]
+                                    Heat treatment: [value]  # Choose from: quenching, high-frequency quenching, tempering, normalizing, carburizing, vacuum heat treatment, or 'None of the above'
+                                    Surface treatment: [value]  # Choose from: anodizing, non-electrolytic plating, black dyeing or blackening, phosphate manganese coating, trivalent chromate (ZMC3), hard chrome plating, or 'None of the above'
+                                    Shape of object: [value]  # Choose from: round, angle, plate, or others
+                                    Dimension of object: [value]  # Format like: 100x50x25 or ⌀30x150
+                                    Tolerance grade: [value]  # Choose from: Fine grade, Medium grade, Coarse grade, Very coarse grade, or Not selected
+                                    Dimensional tolerance: [value]  # e.g., ±0.1, ±0.01, general tolerance
+                                    Polishing: [Yes/No]
+                                    Painting: [Yes/No]
+                                    Surface roughness: [value]  # Choose from: G, 0.8, 1.6, 3.2
+                                 """
                         ),
                     },
                 ],
