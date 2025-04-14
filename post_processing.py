@@ -43,21 +43,37 @@ EXPECTED_VALUES = {
 def clean_value(val, key=None):
     if not val:
         return ""
+
     val = val.strip()
 
-    # Ignore placeholder values
-    if val.lower() in ["none", "none of the above", "[value]", "[none]"]:
+    # Lowercased for uniform checks
+    val_lower = val.lower()
+    key_lower = key.lower() if key else ""
+
+    # Common hallucinated placeholders
+    disallowed_values = {
+        "none",
+        "none of the above",
+        "[value]",
+        "[none]",
+        "[text]",
+        "[code]",
+        "code",
+        "value",
+        "text",
+        "name",
+        "type",
+        "material"
+    }
+
+    # Disallow if value is the same as key or looks like a placeholder
+    if val_lower == key_lower or val_lower in disallowed_values:
         return ""
 
-    # Prevent key = value hallucination
-    if key and val.lower() == key.lower():
-        return ""
-
-    # Check for expected categories if key is provided
+    # Check for expected categories if key is known
     if key in EXPECTED_VALUES:
-        # Handle fuzzy matching like Ra12.5 for surface roughness
         for expected in EXPECTED_VALUES[key]:
-            if val.lower() == expected.lower():
+            if val_lower == expected.lower():
                 return expected
         return ""
 
