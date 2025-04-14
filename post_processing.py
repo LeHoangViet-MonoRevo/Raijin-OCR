@@ -46,11 +46,9 @@ def clean_value(val, key=None):
 
     val = val.strip()
 
-    # Lowercased for uniform checks
     val_lower = val.lower()
     key_lower = key.lower() if key else ""
 
-    # Common hallucinated placeholders
     disallowed_values = {
         "none",
         "none of the above",
@@ -63,14 +61,13 @@ def clean_value(val, key=None):
         "text",
         "name",
         "type",
-        "material"
+        "material",
+        "なし",
     }
 
-    # Disallow if value is the same as key or looks like a placeholder
     if val_lower == key_lower or val_lower in disallowed_values:
         return ""
 
-    # Check for expected categories if key is known
     if key in EXPECTED_VALUES:
         for expected in EXPECTED_VALUES[key]:
             if val_lower == expected.lower():
@@ -86,6 +83,39 @@ def get_instruction_and_content(value, key=None):
         "instruction": "NO" if value == "" else "YES",
         "content": value,
     }
+
+
+def clean_dimension(value):
+    if not value:
+        return ""
+
+    value = value.replace("×", "x").replace(" ", "").strip()
+
+    # Format 1: ⌀x1x x2
+    if value.startswith("⌀"):
+        parts = value[1:].split("x")
+        if len(parts) == 2:
+            try:
+                float(parts[0])
+                float(parts[1])
+                return f"⌀{parts[0]}x{parts[1]}"
+            except ValueError:
+                return ""
+        else:
+            return ""
+
+    # Format 2: x1 x x2 x x3
+    parts = value.split("x")
+    if len(parts) == 3:
+        try:
+            float(parts[0])
+            float(parts[1])
+            float(parts[2])
+            return "x".join(parts)
+        except ValueError:
+            return ""
+
+    return ""
 
 
 def convert_to_output_format(entry: dict) -> dict:
@@ -115,11 +145,7 @@ def convert_to_output_format(entry: dict) -> dict:
         "product_shape": {
             "shape": clean_value(entry.get("Shape of object", ""), "Shape of object")
             or "others",
-            "dimension": clean_value(
-                entry.get("Dimension of object", ""), "Dimension of object"
-            )
-            .replace("×", "x")
-            .replace(" ", ""),
+            "dimension": clean_dimension(entry.get("Dimension of object", "")),
         },
         "surface_roughness": clean_value(
             entry.get("Surface roughness", ""), "Surface roughness"
@@ -182,7 +208,7 @@ if __name__ == "__main__":
                 "Heat treatment": "normalizing",
                 "Surface treatment": "None of the above",
                 "Shape of object": "round",
-                "Dimension of object": "⌀30x150",
+                "Dimension of object": "⌀18.5x⌀3.4x⌀0.05",
                 "Tolerance grade": "Medium grade",
                 "Dimensional tolerance": "±0.1",
                 "Polishing": "Yes",
