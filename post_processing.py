@@ -1,16 +1,71 @@
 import json
 import re
 
+EXPECTED_VALUES = {
+    "Material type": [
+        "stainless steel",
+        "iron",
+        "aluminum",
+        "casting",
+        "brass",
+        "copper",
+    ],
+    "Heat treatment": [
+        "quenching",
+        "high-frequency quenching",
+        "tempering",
+        "normalizing",
+        "carburizing",
+        "vacuum heat treatment",
+    ],
+    "Surface treatment": [
+        "anodizing",
+        "non-electrolytic plating",
+        "black dyeing or blackening",
+        "phosphate manganese coating",
+        "trivalent chromate (ZMC3)",
+        "hard chrome plating",
+    ],
+    "Shape of object": ["round", "angle", "plate", "others"],
+    "Tolerance grade": [
+        "Fine grade",
+        "Medium grade",
+        "Coarse grade",
+        "Very coarse grade",
+        "Not selected",
+    ],
+    "Surface roughness": ["G", "0.8", "1.6", "3.2", "Ra12.5"],
+    "Polishing": ["Yes", "No"],
+    "Painting": ["Yes", "No"],
+}
 
-def clean_value(val):
+
+def clean_value(val, key=None):
+    if not val:
+        return ""
     val = val.strip()
-    return (
-        "" if val.lower() in ["none", "none of the above", "[value]", "[none]"] else val
-    )
+
+    # Ignore placeholder values
+    if val.lower() in ["none", "none of the above", "[value]", "[none]"]:
+        return ""
+
+    # Prevent key = value hallucination
+    if key and val.lower() == key.lower():
+        return ""
+
+    # Check for expected categories if key is provided
+    if key in EXPECTED_VALUES:
+        # Handle fuzzy matching like Ra12.5 for surface roughness
+        for expected in EXPECTED_VALUES[key]:
+            if val.lower() == expected.lower():
+                return expected
+        return ""
+
+    return val
 
 
-def get_instruction_and_content(value):
-    value = clean_value(value)
+def get_instruction_and_content(value, key=None):
+    value = clean_value(value, key)
     return {
         "instruction": "NO" if value == "" else "YES",
         "content": value,
@@ -19,35 +74,50 @@ def get_instruction_and_content(value):
 
 def convert_to_output_format(entry: dict) -> dict:
     return {
-        "ocr_product_code": clean_value(entry.get("Product code", "")),
-        "ocr_product_name": clean_value(entry.get("Product name", "")),
-        "ocr_drawing_number": clean_value(entry.get("Product code", "")),
-        "ocr_drawing_issuer": clean_value(entry.get("Customer", "")),
+        "ocr_product_code": clean_value(entry.get("Product code", ""), "Product code"),
+        "ocr_product_name": clean_value(entry.get("Product name", ""), "Product name"),
+        "ocr_drawing_number": clean_value(
+            entry.get("Product code", ""), "Product code"
+        ),
+        "ocr_drawing_issuer": clean_value(entry.get("Customer", ""), "Customer"),
         "material_type": {
-            "material_code": clean_value(entry.get("Material code", "")),
-            "material_type": clean_value(entry.get("Material type", "")),
+            "material_code": clean_value(
+                entry.get("Material code", ""), "Material code"
+            ),
+            "material_type": clean_value(
+                entry.get("Material type", ""), "Material type"
+            ),
         },
         "required_precision": {
-            "tolerance_grade": clean_value(entry.get("Tolerance grade", "")),
+            "tolerance_grade": clean_value(
+                entry.get("Tolerance grade", ""), "Tolerance grade"
+            ),
             "dimensional_tolerance": clean_value(
                 entry.get("Dimensional tolerance", "")
             ),
         },
         "product_shape": {
-            "shape": clean_value(entry.get("Shape of object", "OTHERS")),
-            "dimension": clean_value(entry.get("Dimension of object", "0x0x0"))
+            "shape": clean_value(entry.get("Shape of object", ""), "Shape of object")
+            or "others",
+            "dimension": clean_value(
+                entry.get("Dimension of object", ""), "Dimension of object"
+            )
             .replace("×", "x")
             .replace(" ", ""),
         },
-        "surface_roughness": clean_value(entry.get("Surface roughness", "")),
-        "polishing": clean_value(entry.get("Polishing", "")),
-        "surface_treatment": get_instruction_and_content(
-            entry.get("Surface treatment", "")
+        "surface_roughness": clean_value(
+            entry.get("Surface roughness", ""), "Surface roughness"
         ),
-        "heat_treatment": get_instruction_and_content(entry.get("Heat treatment", "")),
+        "polishing": clean_value(entry.get("Polishing", ""), "Polishing"),
+        "surface_treatment": get_instruction_and_content(
+            entry.get("Surface treatment", ""), "Surface treatment"
+        ),
+        "heat_treatment": get_instruction_and_content(
+            entry.get("Heat treatment", ""), "Heat treatment"
+        ),
         "painting": (
             "NO"
-            if clean_value(entry.get("Painting", "")).lower() in ["", "no"]
+            if clean_value(entry.get("Painting", ""), "Painting").lower() in ["", "no"]
             else "YES"
         ),
     }
@@ -65,25 +135,21 @@ def parse_model_output(text: str) -> list:
             continue
 
         entry = {}
-        image_match = re.search(r"Image path:\s*(.*)", block)
-        image_path = image_match.group(1).strip() if image_match else ""
 
-        # Try to extract JSON if present
         json_match = re.search(r"```json\s*(\{.*?\})\s*```", block, re.DOTALL)
         if json_match:
             try:
                 entry = json.loads(json_match.group(1))
             except json.JSONDecodeError:
-                continue  # skip broken json blocks
+                continue
         else:
-            # Fallback to key-value line parsing
             for line in block.splitlines():
                 if ":" in line:
                     key, value = line.split(":", 1)
                     entry[key.strip()] = value.strip()
 
         formatted = convert_to_output_format(entry)
-        outputs.append({"image_path": image_path, "data": formatted})
+        outputs.append(formatted)
 
     return outputs
 
@@ -110,4 +176,4 @@ if __name__ == "__main__":
                 ```
                  """
     parsed_output = parse_model_output(raw_output)
-    print(f"\n {parsed_output[0]['data']}")
+    print(json.dumps(parsed_output[0], indent=2, ensure_ascii=False))
