@@ -91,7 +91,7 @@ def clean_dimension(value):
 
     value = value.replace("×", "x").replace(" ", "").strip()
 
-    # Format 1: ⌀x1x x2
+    # Format 1: ⌀r x L
     if value.startswith("⌀"):
         parts = value[1:].split("x")
         if len(parts) == 2:
@@ -101,12 +101,21 @@ def clean_dimension(value):
                 return f"⌀{parts[0]}x{parts[1]}"
             except ValueError:
                 return ""
-        else:
-            return ""
 
-    # Format 2: x1 x x2 x x3
+    # Format 2: L x ⌀r
+    if "x⌀" in value:
+        parts = value.split("x⌀")
+        if len(parts) == 2:
+            try:
+                float(parts[0])
+                float(parts[1])
+                return f"{parts[0]}x⌀{parts[1]}"
+            except ValueError:
+                return ""
+
+    # Format 3: x1 x x2 x x3
     parts = value.split("x")
-    if len(parts) == 3:
+    if len(parts) == 3 and all("⌀" not in p for p in parts):
         try:
             float(parts[0])
             float(parts[1])
@@ -208,7 +217,7 @@ if __name__ == "__main__":
                 "Heat treatment": "normalizing",
                 "Surface treatment": "None of the above",
                 "Shape of object": "round",
-                "Dimension of object": "⌀18.5x⌀3.4x⌀0.05",
+                "Dimension of object": "10x⌀18",
                 "Tolerance grade": "Medium grade",
                 "Dimensional tolerance": "±0.1",
                 "Polishing": "Yes",
