@@ -76,6 +76,39 @@ class OCRPostProcessor:
             "content": value,
         }
 
+    def convert_phi_to_box(self, value):
+        """
+        Converts dimension strings involving ⌀ into 'width x height x depth' format.
+        E.g., '⌀10x30' → '10x10x30', '30x⌀10' → '30x10x10'
+        """
+        if not value:
+            return ""
+
+        value = value.replace("×", "x").replace(" ", "").strip()
+        value = re.sub(r"[\[\]{}()]", "", value)  # remove wrappers if any
+
+        if value.startswith("⌀"):
+            parts = value[1:].split("x")
+            if len(parts) == 2:
+                try:
+                    d = float(parts[0])
+                    l = float(parts[1])
+                    return f"{d}x{d}x{l}"
+                except ValueError:
+                    return ""
+        
+        if "x⌀" in value:
+            parts = value.split("x⌀")
+            if len(parts) == 2:
+                try:
+                    l = float(parts[0])
+                    d = float(parts[1])
+                    return f"{l}x{d}x{d}"
+                except ValueError:
+                    return ""
+
+        return ""
+
     def clean_dimension(self, value):
         if not value:
             return ""
@@ -83,25 +116,9 @@ class OCRPostProcessor:
         value = self.strip_wrappers(value)
         value = value.replace("×", "x").replace(" ", "").strip()
 
-        if value.startswith("⌀"):
-            parts = value[1:].split("x")
-            if len(parts) == 2:
-                try:
-                    float(parts[0])
-                    float(parts[1])
-                    return f"⌀{parts[0]}x{parts[1]}"
-                except ValueError:
-                    return ""
-
-        if "x⌀" in value:
-            parts = value.split("x⌀")
-            if len(parts) == 2:
-                try:
-                    float(parts[0])
-                    float(parts[1])
-                    return f"{parts[0]}x⌀{parts[1]}"
-                except ValueError:
-                    return ""
+        phi_box = self.convert_phi_to_box(value)
+        if phi_box:
+            return phi_box
 
         parts = value.split("x")
         if len(parts) == 3 and all("⌀" not in p for p in parts):
@@ -211,7 +228,7 @@ if __name__ == "__main__":
                 "Heat treatment": "MTB",
                 "Surface treatment": "GC",
                 "Shape of object": "angle",
-                "Dimension of object": "⌀9 x 3.17 x 2.84",
+                "Dimension of object": "⌀9.32 x 3.17",
                 "Tolerance grade": "Medium grade",
                 "Dimensional tolerance": "±0.1",
                 "Polishing": "Yes",
