@@ -30,15 +30,15 @@ class Prompt(object):
                                     Material code: [value]
                                     Material type: [value]  # Choose from: stainless steel, iron, aluminum, casting, brass, copper
                                     Customer: [value]
-                                    Heat treatment: [value]  # Choose from: quenching, high-frequency quenching, tempering, normalizing, carburizing, vacuum heat treatment, or 'None of the above'
-                                    Surface treatment: [value]  # Choose from: anodizing, non-electrolytic plating, black dyeing or blackening, phosphate manganese coating, trivalent chromate (ZMC3), hard chrome plating, or 'None of the above'
+                                    Heat treatment: [value]
+                                    Surface treatment: [value]
                                     Shape of object: [value]  # Choose from: round, angle, plate, or others
                                     Dimension of object: [value]  # Format like: 100x50x25 or ⌀30x150
-                                    Tolerance grade: [value]  # Choose from: Fine grade, Medium grade, Coarse grade, Very coarse grade, or Not selected
-                                    Dimensional tolerance: [value]  # e.g., ±0.1, ±0.01, general tolerance
+                                    Tolerance grade: [value]  # Choose from: Fine grade, Medium grade, Coarse grade, Very coarse grade, or Not exist in the drawing
+                                    Dimensional tolerance: [value]  # e.g., ±0.1, ±0.01, ±0.001, general tolerance
                                     Polishing: [Yes/No]
                                     Painting: [Yes/No]
-                                    Surface roughness: [value]  # Choose from: G, 0.8, 1.6, 3.2
+                                    Surface roughness: [value]  # Choose from: Ra0.4, Ra0.8, Ra1.6, Ra3.2, Ra6.3, Ra12.5, Ra25~, Not exist in the drawing
                                  """
                         ),
                     },
