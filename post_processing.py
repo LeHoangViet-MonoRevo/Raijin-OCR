@@ -12,22 +12,6 @@ class OCRPostProcessor:
             "brass",
             "copper",
         ],
-        "Heat treatment": [
-            "quenching",
-            "high-frequency quenching",
-            "tempering",
-            "normalizing",
-            "carburizing",
-            "vacuum heat treatment",
-        ],
-        "Surface treatment": [
-            "anodizing",
-            "non-electrolytic plating",
-            "black dyeing or blackening",
-            "phosphate manganese coating",
-            "trivalent chromate (ZMC3)",
-            "hard chrome plating",
-        ],
         "Shape of object": ["round", "angle", "plate", "others"],
         "Tolerance grade": [
             "Fine grade",
@@ -85,7 +69,8 @@ class OCRPostProcessor:
         return val
 
     def get_instruction_and_content(self, value, key=None):
-        value = self.clean_value(value, key)
+        value = self.strip_wrappers(value)
+        value = value.strip()
         return {
             "instruction": "NO" if value == "" else "YES",
             "content": value,
@@ -216,20 +201,24 @@ class OCRPostProcessor:
 
 if __name__ == "__main__":
     raw_output = """
-                Product name: 芯棒NO.5-2 76
-                Product code: [C3604]
-                Material code: [JIS B 0024]
-                Material type: [stainless steel]
-                Customer: [MTEC]
-                Heat treatment: [None of the above]
-                Surface treatment: [None of the above]
-                Shape of object: angle
-                Dimension of object: [⌀30x150]
-                Tolerance grade: [Medium grade]
-                Dimensional tolerance: [±0.01]
-                Polishing: [Yes]
-                Painting: [Yes]
-                Surface roughness: [G]
+                ```json
+                {
+                "Product name": "JOINT",
+                "Product code": "26015-X1JJ0-A",
+                "Material code": "SS400",
+                "Material type": "stainless steel",
+                "Customer": "TOYOTA BOSHOKU CORPORATION",
+                "Heat treatment": "MTB",
+                "Surface treatment": "GC",
+                "Shape of object": "angle",
+                "Dimension of object": "⌀9 x 3.17 x 2.84",
+                "Tolerance grade": "Medium grade",
+                "Dimensional tolerance": "±0.1",
+                "Polishing": "Yes",
+                "Painting": "Yes",
+                "Surface roughness": "Ra0.8"
+                }
+                ```
     """
     processor = OCRPostProcessor()
     parsed_output = processor.parse_model_output(raw_output)
