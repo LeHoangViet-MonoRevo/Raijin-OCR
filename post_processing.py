@@ -207,10 +207,10 @@ class OCRPostProcessor:
         )
         return dimensional_tolerance_category
 
-    def convert_phi_to_box(self, value):
+    def convert_phi_to_box(self, value, default_value: str = "0x0x0"):
         try:
             if not value:
-                return ""
+                return default_value
 
             value = value.replace("×", "x").replace(" ", "").strip()
             value = re.sub(r"[\[\]{}()]", "", value)
@@ -229,14 +229,14 @@ class OCRPostProcessor:
                     d = float(parts[1])
                     return f"{l}x{d}x{d}"
 
-            return ""
+            return default_value
         except Exception:
-            return ""
+            return default_value
 
-    def clean_dimension(self, value):
+    def clean_dimension(self, value, default_value: str = "0x0x0"):
         try:
             if not value:
-                return ""
+                return default_value
             value = self.strip_wrappers(value)
             value = value.replace("×", "x").replace(" ", "").strip()
 
@@ -250,9 +250,9 @@ class OCRPostProcessor:
                 float(parts[1])
                 float(parts[2])
                 return "x".join(parts)
-            return ""
+            return default_value
         except Exception:
-            return ""
+            return default_value
 
     def convert_to_output_format(self, entry):
         try:
@@ -374,13 +374,13 @@ if __name__ == "__main__":
         "Product name": "JOINT",
         "Product code": "26015-X1JJ0-A",
         "Material code": "SS400",
-        "Material type": "stainless steel",
+        "Material type": "kkkk",
         "Customer": "TOYOTA BOSHOKU CORPORATION",
         "Heat treatment": "MTB",
         "Surface treatment": "GC",
-        "Shape of object": "angle",
-        "Dimension of object": "⌀9.32 * 3.17",
-        "Tolerance grade": "Medium grade",
+        "Shape of object": "round",
+        "Dimension of object": "",
+        "Tolerance grade": "coarse grade",
         "Dimensional tolerance": "±0.6",
         "Polishing": "Yes",
         "Painting": "Yes",
