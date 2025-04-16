@@ -98,35 +98,34 @@ class OCRPostProcessor:
 
     @staticmethod
     def get_most_precise_dimensional_tolerance(
-        value: str, default_value: str = "GENERAL_TOLERANCE"
-    ):
+        value: str,
+        default_value: str = "NO_SELECTION",
+        general_tolerance_label: str = "GENERAL_TOLERANCE",
+    ) -> str:
         try:
-            if not value:
+            if not value or "no" in value.lower():  # Safer answer "NO_SELECTION"
                 return default_value
+            has_general_tolerance = "general tolerance" in value.lower()
 
-            # Step 1: Normalise input
+            # Normalise input
             value = value.replace(",", " ")
             parts = re.split(r"\s+", value.strip().lower())
 
             numeric_tolerances = []
-            has_general_tolerance = False
-
             for part in parts:
                 if part.startswith("±"):
                     try:
-                        numeric_tolerances.append(
-                            (float(part[1:]), part)
-                        )  # store (value, original string)
+                        numeric_tolerances.append((float(part[1:]), part))
                     except ValueError:
                         continue
-                elif part == "general tolerance":
-                    has_general_tolerance = True
 
-            # Step 2 & 3: Compare and return smallest numeric tolerance if any
             if numeric_tolerances:
-                # Sort by float value, return original formatted version
+                # Return the smallest numeric tolerance
                 numeric_tolerances.sort()
                 return numeric_tolerances[0][1]
+
+            if has_general_tolerance:
+                return general_tolerance_label
 
             return default_value
         except Exception:
@@ -136,25 +135,17 @@ class OCRPostProcessor:
     def classify_dimensional_tolerance_general(
         tolerance: str,
         allowed=ALLOWED_TOLERANCES,
-        default_value: str = "GENERAL_TOLERANCE",
+        general_label: str = "GENERAL_TOLERANCE",
+        default_value: str = "NO_SELECTION",
     ) -> str:
-        if not tolerance:
+        if not tolerance or "no" in tolerance.lower():
             return default_value
+
+        if general_label in tolerance:
+            return general_label
 
         try:
             tolerance = tolerance.strip().lower()
-
-            # Normalize allowed list into (float_val, original_str)
-            numeric_classes = []
-            for item in allowed:
-                if item.startswith("±"):
-                    try:
-                        numeric_classes.append((float(item[1:]), item))
-                    except ValueError:
-                        continue
-
-            # Sort thresholds ascending
-            numeric_classes.sort()
 
             if tolerance.startswith("±"):
                 try:
@@ -162,7 +153,26 @@ class OCRPostProcessor:
                 except ValueError:
                     return default_value
 
-                # Find the closest lower or equal threshold
+                # Normalize allowed tolerances
+                numeric_classes = []
+                for item in allowed:
+                    if item.startswith("±"):
+                        try:
+                            numeric_classes.append((float(item[1:]), item))
+                        except ValueError:
+                            continue
+
+                if not numeric_classes:
+                    return default_value
+
+                # Sort ascending
+                numeric_classes.sort()
+
+                # Reject if value is smaller than the smallest category
+                if value < numeric_classes[0][0]:
+                    return default_value
+
+                # Return the closest lower or equal threshold
                 for threshold, label in reversed(numeric_classes):
                     if value >= threshold:
                         return label
@@ -172,11 +182,16 @@ class OCRPostProcessor:
             return default_value
 
     def postprocess_dimensional_tolerance_general(
-        self, value: str, default_value: str = "GENERAL_TOLERANCE"
+        self,
+        value: str,
+        general_tolerance_label: str = "GENERAL_TOLERANCE",
+        default_value: str = "NO_SELECTION",
     ):
         most_precise_dimensional_tolerance = (
             OCRPostProcessor.get_most_precise_dimensional_tolerance(
-                value, default_value=default_value
+                value,
+                default_value=default_value,
+                general_tolerance_label=general_tolerance_label,
             )
         )
         dimensional_tolerance_category = (
@@ -184,9 +199,12 @@ class OCRPostProcessor:
                 most_precise_dimensional_tolerance,
                 allowed=self.ALLOWED_TOLERANCES,
                 default_value=default_value,
+                general_label=general_tolerance_label,
             )
         )
-        print(f"value: {value}. Category: {dimensional_tolerance_category}")
+        print(
+            f"value: {value}. most_precise_dimensional_tolerance: {most_precise_dimensional_tolerance}"
+        )
         return dimensional_tolerance_category
 
     def convert_phi_to_box(self, value):
@@ -363,7 +381,7 @@ if __name__ == "__main__":
         "Shape of object": "angle",
         "Dimension of object": "⌀9.32 * 3.17",
         "Tolerance grade": "Medium grade",
-        "Dimensional tolerance": "±0.00001",
+        "Dimensional tolerance": "±0.6",
         "Polishing": "Yes",
         "Painting": "Yes",
         "Surface roughness": "Ra0.8"
