@@ -47,6 +47,9 @@ class OCRPostProcessor:
         "type",
         "material",
         "なし",
+        "null",
+        "not exist",
+        "not exist in the drawing",
     }
 
     def __init__(self):
@@ -81,8 +84,9 @@ class OCRPostProcessor:
 
     def get_instruction_and_content(self, value, key=None):
         try:
-            value = self.strip_wrappers(value)
-            value = value.strip()
+            # value = self.strip_wrappers(value)
+            # value = value.strip()
+            value = self.clean_value(value)
             return {
                 "instruction": "NO" if value == "" else "YES",
                 "content": value,
