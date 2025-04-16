@@ -62,3 +62,6 @@ Thumbs.db
 
 # Images and other media
 /images/
+
+# Zipped files
+*.zip
