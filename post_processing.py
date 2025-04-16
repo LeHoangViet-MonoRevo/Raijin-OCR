@@ -33,6 +33,8 @@ class OCRPostProcessor:
         "Painting": ["Yes", "No"],
     }
 
+    ALLOWED_TOLERANCES = ["±0.001", "±0.01", "±0.1"]
+
     DISALLOWED_VALUES = {
         "none",
         "none of the above",
@@ -130,6 +132,63 @@ class OCRPostProcessor:
         except Exception:
             return default_value
 
+    @staticmethod
+    def classify_dimensional_tolerance_general(
+        tolerance: str,
+        allowed=ALLOWED_TOLERANCES,
+        default_value: str = "GENERAL_TOLERANCE",
+    ) -> str:
+        if not tolerance:
+            return default_value
+
+        try:
+            tolerance = tolerance.strip().lower()
+
+            # Normalize allowed list into (float_val, original_str)
+            numeric_classes = []
+            for item in allowed:
+                if item.startswith("±"):
+                    try:
+                        numeric_classes.append((float(item[1:]), item))
+                    except ValueError:
+                        continue
+
+            # Sort thresholds ascending
+            numeric_classes.sort()
+
+            if tolerance.startswith("±"):
+                try:
+                    value = float(tolerance[1:])
+                except ValueError:
+                    return default_value
+
+                # Find the closest lower or equal threshold
+                for threshold, label in reversed(numeric_classes):
+                    if value >= threshold:
+                        return label
+
+            return default_value
+        except Exception:
+            return default_value
+
+    def postprocess_dimensional_tolerance_general(
+        self, value: str, default_value: str = "GENERAL_TOLERANCE"
+    ):
+        most_precise_dimensional_tolerance = (
+            OCRPostProcessor.get_most_precise_dimensional_tolerance(
+                value, default_value=default_value
+            )
+        )
+        dimensional_tolerance_category = (
+            OCRPostProcessor.classify_dimensional_tolerance_general(
+                most_precise_dimensional_tolerance,
+                allowed=self.ALLOWED_TOLERANCES,
+                default_value=default_value,
+            )
+        )
+        print(f"value: {value}. Category: {dimensional_tolerance_category}")
+        return dimensional_tolerance_category
+
     def convert_phi_to_box(self, value):
         try:
             if not value:
@@ -204,7 +263,7 @@ class OCRPostProcessor:
                     "tolerance_grade": self.clean_value(
                         entry.get("Tolerance grade", ""), "Tolerance grade"
                     ),
-                    "dimensional_tolerance": OCRPostProcessor.get_most_precise_dimensional_tolerance(
+                    "dimensional_tolerance": self.postprocess_dimensional_tolerance_general(
                         entry.get("Dimensional tolerance", "")
                     ),
                 },
@@ -304,7 +363,7 @@ if __name__ == "__main__":
         "Shape of object": "angle",
         "Dimension of object": "⌀9.32 * 3.17",
         "Tolerance grade": "Medium grade",
-        "Dimensional tolerance": "",
+        "Dimensional tolerance": "±0.00001",
         "Polishing": "Yes",
         "Painting": "Yes",
         "Surface roughness": "Ra0.8"
