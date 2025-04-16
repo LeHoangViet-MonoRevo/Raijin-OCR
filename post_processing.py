@@ -297,7 +297,12 @@ class OCRPostProcessor:
                 "surface_roughness": self.clean_value(
                     entry.get("Surface roughness", ""), "Surface roughness"
                 ),
-                "polishing": self.clean_value(entry.get("Polishing", ""), "Polishing"),
+                "polishing": (
+                    "NO"
+                    if self.clean_value(entry.get("Polishing", ""), "Polishing").lower()
+                    in ["", "no"]
+                    else "YES"
+                ),
                 "surface_treatment": self.get_instruction_and_content(
                     entry.get("Surface treatment", ""), "Surface treatment"
                 ),
