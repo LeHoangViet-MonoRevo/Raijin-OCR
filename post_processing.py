@@ -94,6 +94,42 @@ class OCRPostProcessor:
         except Exception:
             return {"instruction": "NO", "content": ""}
 
+    @staticmethod
+    def get_most_precise_dimensional_tolerance(
+        value: str, default_value: str = "GENERAL_TOLERANCE"
+    ):
+        try:
+            if not value:
+                return default_value
+
+            # Step 1: Normalise input
+            value = value.replace(",", " ")
+            parts = re.split(r"\s+", value.strip().lower())
+
+            numeric_tolerances = []
+            has_general_tolerance = False
+
+            for part in parts:
+                if part.startswith("±"):
+                    try:
+                        numeric_tolerances.append(
+                            (float(part[1:]), part)
+                        )  # store (value, original string)
+                    except ValueError:
+                        continue
+                elif part == "general tolerance":
+                    has_general_tolerance = True
+
+            # Step 2 & 3: Compare and return smallest numeric tolerance if any
+            if numeric_tolerances:
+                # Sort by float value, return original formatted version
+                numeric_tolerances.sort()
+                return numeric_tolerances[0][1]
+
+            return default_value
+        except Exception:
+            return default_value
+
     def convert_phi_to_box(self, value):
         try:
             if not value:
@@ -168,7 +204,7 @@ class OCRPostProcessor:
                     "tolerance_grade": self.clean_value(
                         entry.get("Tolerance grade", ""), "Tolerance grade"
                     ),
-                    "dimensional_tolerance": self.clean_value(
+                    "dimensional_tolerance": OCRPostProcessor.get_most_precise_dimensional_tolerance(
                         entry.get("Dimensional tolerance", "")
                     ),
                 },
@@ -268,7 +304,7 @@ if __name__ == "__main__":
         "Shape of object": "angle",
         "Dimension of object": "⌀9.32 * 3.17",
         "Tolerance grade": "Medium grade",
-        "Dimensional tolerance": "±0.1",
+        "Dimensional tolerance": "",
         "Polishing": "Yes",
         "Painting": "Yes",
         "Surface roughness": "Ra0.8"
