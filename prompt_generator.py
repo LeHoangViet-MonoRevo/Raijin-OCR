@@ -28,7 +28,7 @@ class Prompt(object):
                                     Product name: [value]
                                     Product code: [value]
                                     Material code: [value]
-                                    Material type: [value]  # Choose from: stainless steel, iron, aluminum, casting, brass, copper
+                                    Material type: [value]  # Choose from: stainless steel, iron, aluminum, cast metal, brass, copper
                                     Customer: [value]
                                     Heat treatment: [value]
                                     Surface treatment: [value]
