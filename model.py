@@ -4,6 +4,7 @@ import torch
 from PIL import Image
 import numpy as np
 from typing import Union
+from post_processing import OCRPostProcessor
 
 
 class TechnicalDrawingExtractor:
@@ -31,6 +32,8 @@ class TechnicalDrawingExtractor:
             max_pixels=max_pixels,
             use_fast=use_fast,
         )
+
+        self.model_parser = OCRPostProcessor()
 
     @staticmethod
     def get_image_dimension(image_path: Union[str, np.ndarray]) -> tuple[int, int]:
@@ -75,4 +78,9 @@ class TechnicalDrawingExtractor:
         output_text = self.processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization=False
         )
-        return output_text[0] if output_text else ""
+
+        if output_text:
+            response = self.model_parser.parse_model_output(output_text[0])
+        else:
+            response = ""
+        return response
