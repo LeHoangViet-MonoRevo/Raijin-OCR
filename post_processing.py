@@ -1,5 +1,6 @@
 import json
 import re
+from typing import Dict, List
 
 
 class OCRPostProcessor:
@@ -57,13 +58,13 @@ class OCRPostProcessor:
     def __init__(self):
         pass
 
-    def strip_wrappers(self, val):
+    def strip_wrappers(self, val: str) -> str:
         try:
             return re.sub(r"^[\[\(\{\"\']+|[\]\)\}\"\']+$", "", val.strip())
         except Exception:
             return ""
 
-    def clean_value(self, val, key=None):
+    def clean_value(self, val: str, key: str = None) -> str:
         try:
             if not val:
                 return ""
@@ -84,10 +85,8 @@ class OCRPostProcessor:
         except Exception:
             return ""
 
-    def get_instruction_and_content(self, value, key=None):
+    def get_instruction_and_content(self, value: str) -> Dict:
         try:
-            # value = self.strip_wrappers(value)
-            # value = value.strip()
             value = self.clean_value(value)
             return {
                 "instruction": "NO" if value == "" else "YES",
@@ -134,7 +133,7 @@ class OCRPostProcessor:
     @staticmethod
     def classify_dimensional_tolerance_general(
         tolerance: str,
-        allowed=ALLOWED_TOLERANCES,
+        allowed: List = ALLOWED_TOLERANCES,
         general_label: str = "GENERAL_TOLERANCE",
         default_value: str = "NO_SELECTION",
     ) -> str:
@@ -186,7 +185,7 @@ class OCRPostProcessor:
         value: str,
         general_tolerance_label: str = "GENERAL_TOLERANCE",
         default_value: str = "NO_SELECTION",
-    ):
+    ) -> str:
         most_precise_dimensional_tolerance = (
             OCRPostProcessor.get_most_precise_dimensional_tolerance(
                 value,
@@ -202,12 +201,9 @@ class OCRPostProcessor:
                 general_label=general_tolerance_label,
             )
         )
-        print(
-            f"value: {value}. most_precise_dimensional_tolerance: {most_precise_dimensional_tolerance}"
-        )
         return dimensional_tolerance_category
 
-    def convert_phi_to_box(self, value, default_value: str = "0x0x0"):
+    def convert_phi_to_box(self, value: str, default_value: str = "0x0x0") -> str:
         try:
             if not value:
                 return default_value
@@ -233,7 +229,7 @@ class OCRPostProcessor:
         except Exception:
             return default_value
 
-    def clean_dimension(self, value, default_value: str = "0x0x0"):
+    def clean_dimension(self, value: str, default_value: str = "0x0x0") -> str:
         try:
             if not value:
                 return default_value
@@ -254,7 +250,7 @@ class OCRPostProcessor:
         except Exception:
             return default_value
 
-    def convert_to_output_format(self, entry):
+    def convert_to_output_format(self, entry: str) -> Dict:
         try:
             return {
                 "ocr_product_code": self.clean_value(
@@ -304,10 +300,10 @@ class OCRPostProcessor:
                     else "YES"
                 ),
                 "surface_treatment": self.get_instruction_and_content(
-                    entry.get("Surface treatment", ""), "Surface treatment"
+                    entry.get("Surface treatment", ""),
                 ),
                 "heat_treatment": self.get_instruction_and_content(
-                    entry.get("Heat treatment", ""), "Heat treatment"
+                    entry.get("Heat treatment", ""),
                 ),
                 "painting": (
                     "NO"
@@ -341,7 +337,7 @@ class OCRPostProcessor:
                 "painting": "NO",
             }
 
-    def parse_model_output(self, text):
+    def parse_model_output(self, text: str):
         outputs = []
         try:
             blocks = text.split("=" * 80)
