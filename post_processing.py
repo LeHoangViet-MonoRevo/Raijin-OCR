@@ -8,7 +8,7 @@ class OCRPostProcessor:
             "stainless steel",
             "iron",
             "aluminum",
-            "casting",
+            "cast metal",
             "brass",
             "copper",
         ],
