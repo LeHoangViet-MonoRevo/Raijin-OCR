@@ -290,6 +290,16 @@ class OCRPostProcessor:
                         entry.get("Dimension of object", "")
                     ),
                 },
+                "processing_content": {
+                    "processing_surface": 0,
+                    "processing_locations": 0,
+                    "number_of_special_processing_locations": 0,
+                },
+                "lathe_processing_content": {
+                    "processing_surface": 0,
+                    "processing_locations": 0,
+                    "number_of_special_processing_locations": 0,
+                },
                 "surface_roughness": self.clean_value(
                     entry.get("Surface roughness", ""), "Surface roughness"
                 ),
@@ -329,6 +339,16 @@ class OCRPostProcessor:
                 "product_shape": {
                     "shape": "others",
                     "dimension": "",
+                },
+                "processing_content": {
+                    "processing_surface": 0,
+                    "processing_locations": 0,
+                    "number_of_special_processing_locations": 0,
+                },
+                "lathe_processing_content": {
+                    "processing_surface": 0,
+                    "processing_locations": 0,
+                    "number_of_special_processing_locations": 0,
                 },
                 "surface_roughness": "",
                 "polishing": "",
