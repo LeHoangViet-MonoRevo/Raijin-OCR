@@ -192,33 +192,21 @@ class MainPostprocessor:
             ),
         }
 
-    def parse_model_output(self, text: str) -> List[Dict]:
-        outputs = []
+    def parse_model_output(self, text: str) -> Dict:
         try:
-            blocks = text.split("=" * 80)
-            for block in blocks:
-                block = block.strip()
-                if not block:
-                    continue
-
+            json_match = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
+            if json_match:
+                entry = json.loads(json_match.group(1))
+            else:
                 entry = {}
-                json_match = re.search(r"```json\s*(\{.*?\})\s*```", block, re.DOTALL)
-                if json_match:
-                    try:
-                        entry = json.loads(json_match.group(1))
-                    except json.JSONDecodeError:
-                        continue
-                else:
-                    for line in block.splitlines():
-                        if ":" in line:
-                            key, value = line.split(":", 1)
-                            entry[key.strip()] = value.strip()
+                for line in text.strip().splitlines():
+                    if ":" in line:
+                        key, value = line.split(":", 1)
+                        entry[key.strip()] = value.strip()
 
-                formatted = self.convert_to_output_format(entry)
-                outputs.append(formatted)
+            return self.convert_to_output_format(entry)
         except Exception:
-            pass
-        return outputs
+            return self.convert_to_output_format({})
 
 
 if __name__ == "__main__":
@@ -244,4 +232,4 @@ if __name__ == "__main__":
     """
     processor = MainPostprocessor()
     parsed_output = processor.parse_model_output(raw_output)
-    print(json.dumps(parsed_output[0], indent=2, ensure_ascii=False))
+    print(json.dumps(parsed_output, indent=2, ensure_ascii=False))
