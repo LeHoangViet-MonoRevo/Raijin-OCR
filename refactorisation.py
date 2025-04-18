@@ -119,46 +119,6 @@ class RequiredPrecisionPostprocessor(BasePostprocessor):
         }
 
 
-class ProductNamePostprocessor(BasePostprocessor):
-    def run(self, entry: dict) -> str:
-        return self.clean_value(entry.get("Product name", ""), "Product name")
-
-
-class DrawingNumberPostprocessor(BasePostprocessor):
-    def run(self, entry: dict) -> str:
-        return self.clean_value(entry.get("Drawing number", ""), "Drawing number")
-
-
-class DrawingIssuerPostprocessor(BasePostprocessor):
-    def run(self, entry: dict) -> str:
-        return self.clean_value(entry.get("Drawing issuer", ""), "Drawing issuer")
-
-
-class InfoContentPostprocessor(BasePostprocessor):
-    def __init__(self, field_name: str):
-        self.field_name = field_name
-
-    def run(self, entry: dict) -> dict:
-        content = self.clean_value(entry.get(self.field_name, ""), self.field_name)
-        return {"instruction": "YES" if content else "NO", "content": content}
-
-
-class PolishingPostprocessor(BasePostprocessor):
-    def run(self, entry: dict) -> str:
-        return self.clean_value(entry.get("Polishing", ""), "Polishing")
-
-
-class SurfaceRoughnessPostprocessor(BasePostprocessor):
-    def run(self, entry: dict) -> str:
-        return self.clean_value(entry.get("Surface roughness", ""), "Surface roughness")
-
-
-class PaintingPostprocessor(BasePostprocessor):
-    def run(self, entry: dict) -> str:
-        val = self.clean_value(entry.get("Painting", ""), "Painting")
-        return "YES" if val and val.lower() != "no" else "NO"
-
-
 class ProductShapePostprocessor(BasePostprocessor):
     def clean_dimension(self, val: str) -> str:
         val = self.clean_value(val, "Dimension of object")
@@ -275,7 +235,7 @@ if __name__ == "__main__":
         "Shape of object": "round",
         "Dimension of object": "",
         "Tolerance grade": "coarse grade",
-        "Dimensional tolerance": "±0.6",
+        "Dimensional tolerance": "±0.09",
         "Polishing": "Yes",
         "Painting": "Yes",
         "Surface roughness": "Ra0.8"
