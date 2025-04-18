@@ -209,6 +209,25 @@ class BasicFieldPostprocessor(BasePostprocessor):
         return self.clean_value(val=entry.get(field_name, ""), allowed_values=None)
 
 
+class SurfaceRoughnessFieldPostprocessor(BasePostprocessor):
+    ALLOWED_SURFACE_ROUGHNESS = [
+        "Ra0.4",
+        "Ra0.8",
+        "Ra1.6",
+        "Ra3.2",
+        "Ra6.3",
+        "Ra12.5",
+        "Ra25~",
+    ]
+    FIELD_NAME = "Surface roughness"
+
+    def run(self, entry: Dict):
+        return self.clean_value(
+            val=entry.get(self.FIELD_NAME),
+            allowed_values=self.ALLOWED_SURFACE_ROUGHNESS,
+        )
+
+
 class MainPostprocessor:
     def __init__(self):
         self.product_code_processor = ProductCodePostprocessor()
@@ -216,6 +235,7 @@ class MainPostprocessor:
         self.required_precision_processor = RequiredPrecisionPostprocessor()
         self.product_shape_processor = ProductShapePostprocessor()
         self.instructional_field_processor = InstructionalFieldPostprocessor()
+        self.surface_roughness_field_processor = SurfaceRoughnessFieldPostprocessor()
         self.basic_processor = BasicFieldPostprocessor()
 
     def convert_to_output_format(self, entry: Dict) -> Dict:
@@ -237,7 +257,7 @@ class MainPostprocessor:
                 "processing_locations": 0,
                 "number_of_special_processing_locations": 0,
             },
-            "surface_roughness": self.basic_processor.run(entry, "Surface roughness"),
+            "surface_roughness": self.surface_roughness_field_processor.run(entry),
             "polishing": self.instructional_field_processor.to_yes_no(
                 entry.get("Polishing", "")
             ),
