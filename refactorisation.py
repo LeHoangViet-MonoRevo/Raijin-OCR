@@ -55,8 +55,12 @@ class BasePostprocessor:
 
 
 class ProductCodePostprocessor(BasePostprocessor):
+    PRODUCT_CODE_FIELD_KEY = "Product code"
+
     def run(self, entry: Dict) -> str:
-        return self.clean_value(val=entry.get("Product code", ""), allowed_values=None)
+        return self.clean_value(
+            val=entry.get(self.PRODUCT_CODE_FIELD_KEY), allowed_values=None
+        )
 
 
 class MaterialTypePostprocessor(BasePostprocessor):
@@ -69,10 +73,15 @@ class MaterialTypePostprocessor(BasePostprocessor):
         "copper",
     ]
 
+    MATERIAL_CODE_FIELD_KEY = "Material code"
+    MATERIAL_TYPE_FIELD_KEY = "Material type"
+
     def run(self, entry: Dict) -> Dict:
-        code = self.clean_value(val=entry.get("Material code", ""), allowed_values=None)
+        code = self.clean_value(
+            val=entry.get(self.MATERIAL_CODE_FIELD_KEY), allowed_values=None
+        )
         material = self.clean_value(
-            val=entry.get("Material type", ""),
+            val=entry.get(self.MATERIAL_TYPE_FIELD_KEY),
             allowed_values=self.ALLOWED_MATERIAL_TYPES,
         )
 
@@ -81,6 +90,8 @@ class MaterialTypePostprocessor(BasePostprocessor):
 
 class RequiredPrecisionPostprocessor(BasePostprocessor):
     ALLOWED_TOLERANCES = ["±0.001", "±0.01", "±0.1"]
+    TOLERANCE_GRADE_FIELD_NAME = "Tolerance grade"
+    DIMENSIONAL_TOLERANCE_FIELD_NAME = "Dimensional tolerance"
 
     def get_most_precise_dimensional_tolerance(self, value: str) -> str:
         if not value or "no" in value.lower():
@@ -122,9 +133,9 @@ class RequiredPrecisionPostprocessor(BasePostprocessor):
 
     def run(self, entry: Dict) -> Dict:
         grade = self.clean_value(
-            val=entry.get("Tolerance grade", ""), allowed_values=None
+            val=entry.get(self.TOLERANCE_GRADE_FIELD_NAME), allowed_values=None
         )
-        raw_tol = entry.get("Dimensional tolerance", "")
+        raw_tol = entry.get(self.DIMENSIONAL_TOLERANCE_FIELD_NAME)
         most_precise = self.get_most_precise_dimensional_tolerance(raw_tol)
         category = self.classify_tolerance(most_precise)
         return {
@@ -135,6 +146,8 @@ class RequiredPrecisionPostprocessor(BasePostprocessor):
 
 class ProductShapePostprocessor(BasePostprocessor):
     ALLOWED_SHAPES = ["round", "angle", "plate", "others"]
+    OBJECT_SHAPE_FIELD_NAME = "Shape of object"
+    OBJECT_DIMENSION_FIELD_NAME = "Dimension of object"
 
     def convert_phi_to_box(self, value: str, default_value: str = "0x0x0") -> str:
         try:
@@ -186,11 +199,12 @@ class ProductShapePostprocessor(BasePostprocessor):
     def run(self, entry: Dict) -> Dict:
         shape = (
             self.clean_value(
-                val=entry.get("Shape of object", ""), allowed_values=self.ALLOWED_SHAPES
+                val=entry.get(self.OBJECT_SHAPE_FIELD_NAME),
+                allowed_values=self.ALLOWED_SHAPES,
             )
             or "others"
         )
-        dimension = self.clean_dimension(entry.get("Dimension of object", ""))
+        dimension = self.clean_dimension(entry.get(self.OBJECT_DIMENSION_FIELD_NAME))
         return {"shape": shape, "dimension": dimension}
 
 
@@ -219,11 +233,11 @@ class SurfaceRoughnessFieldPostprocessor(BasePostprocessor):
         "Ra12.5",
         "Ra25~",
     ]
-    FIELD_NAME = "Surface roughness"
+    SR_FIELD_NAME = "Surface roughness"
 
     def run(self, entry: Dict):
         return self.clean_value(
-            val=entry.get(self.FIELD_NAME),
+            val=entry.get(self.SR_FIELD_NAME),
             allowed_values=self.ALLOWED_SURFACE_ROUGHNESS,
         )
 
