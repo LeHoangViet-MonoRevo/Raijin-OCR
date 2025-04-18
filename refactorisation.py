@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Dict, List
+from typing import Dict, List, Union
 
 
 class BasePostprocessor:
@@ -29,27 +29,38 @@ class BasePostprocessor:
         except Exception:
             return ""
 
-    def clean_value(self, val, key=None):
+    def clean_value(
+        self, val: str, allowed_values: Union[List[str], None] = None
+    ) -> str:
         try:
             if not val:
                 return ""
-            val = self.strip_wrappers(val).strip()
-            val_lower = val.lower()
-            key_lower = key.lower() if key else ""
-            if val_lower == key_lower or val_lower in self.DISALLOWED_VALUES:
+
+            val_cleaned = self.strip_wrappers(val).strip()
+            val_lower = val_cleaned.lower()
+
+            # Discard if it's in the disallowed junk list
+            if val_lower in self.DISALLOWED_VALUES:
                 return ""
-            return val
+
+            # If allowed values are defined, check against them (case-insensitive)
+            if allowed_values:
+                allowed_set = {a.lower() for a in allowed_values}
+                if val_lower not in allowed_set:
+                    return ""
+
+            return val_cleaned
         except Exception:
             return ""
 
 
 class ProductCodePostprocessor(BasePostprocessor):
-    def run(self, entry: dict) -> str:
-        return self.clean_value(entry.get("Product code", ""), "Product code")
+    def run(self, entry: Dict) -> str:
+        return self.clean_value(val=entry.get("Product code", ""), allowed_values=None)
 
 
 class MaterialTypePostprocessor(BasePostprocessor):
-    EXPECTED_VALUES = [
+    ALLOWED_MATERIAL_TYPES = [
         "stainless steel",
         "iron",
         "aluminum",
@@ -58,13 +69,14 @@ class MaterialTypePostprocessor(BasePostprocessor):
         "copper",
     ]
 
-    def run(self, entry: dict) -> dict:
-        code = self.clean_value(entry.get("Material code", ""), "Material code")
-        material = self.clean_value(entry.get("Material type", ""), "Material type")
+    def run(self, entry: Dict) -> Dict:
+        code = self.clean_value(val=entry.get("Material code", ""), allowed_values=None)
+        material = self.clean_value(
+            val=entry.get("Material type", ""),
+            allowed_values=self.ALLOWED_MATERIAL_TYPES,
+        )
 
-        if material.lower() in [m.lower() for m in self.EXPECTED_VALUES]:
-            return {"material_code": code, "material_type": material}
-        return {"material_code": code, "material_type": ""}
+        return {"material_code": code, "material_type": material}
 
 
 class RequiredPrecisionPostprocessor(BasePostprocessor):
@@ -108,8 +120,10 @@ class RequiredPrecisionPostprocessor(BasePostprocessor):
         except ValueError:
             return False
 
-    def run(self, entry: dict) -> dict:
-        grade = self.clean_value(entry.get("Tolerance grade", ""), "Tolerance grade")
+    def run(self, entry: Dict) -> Dict:
+        grade = self.clean_value(
+            val=entry.get("Tolerance grade", ""), allowed_values=None
+        )
         raw_tol = entry.get("Dimensional tolerance", "")
         most_precise = self.get_most_precise_dimensional_tolerance(raw_tol)
         category = self.classify_tolerance(most_precise)
@@ -120,14 +134,18 @@ class RequiredPrecisionPostprocessor(BasePostprocessor):
 
 
 class ProductShapePostprocessor(BasePostprocessor):
+    ALLOWED_SHAPES = ["round", "angle", "plate", "others"]
+
     def clean_dimension(self, val: str) -> str:
         val = self.clean_value(val, "Dimension of object")
         # You can add specific logic for validating/sanitizing dimension strings here
         return val
 
-    def run(self, entry: dict) -> dict:
+    def run(self, entry: Dict) -> Dict:
         shape = (
-            self.clean_value(entry.get("Shape of object", ""), "Shape of object")
+            self.clean_value(
+                val=entry.get("Shape of object", ""), allowed_values=self.ALLOWED_SHAPES
+            )
             or "others"
         )
         dimension = self.clean_dimension(entry.get("Dimension of object", ""))
@@ -135,18 +153,18 @@ class ProductShapePostprocessor(BasePostprocessor):
 
 
 class InstructionalFieldPostprocessor(BasePostprocessor):
-    def run(self, val: str) -> dict:
+    def run(self, val: str) -> Dict:
         cleaned = self.clean_value(val)
         return {"instruction": "YES" if cleaned else "NO", "content": cleaned}
 
     def to_yes_no(self, val: str) -> str:
         cleaned = self.clean_value(val)
-        return "NO" if not cleaned or cleaned.lower() == "no" else "YES"
+        return "YES" if cleaned.lower() == "yes" else "NO"
 
 
 class BasicFieldPostprocessor(BasePostprocessor):
-    def run(self, entry: dict, field_name: str) -> str:
-        return self.clean_value(entry.get(field_name, ""), field_name)
+    def run(self, entry: Dict, field_name: str) -> str:
+        return self.clean_value(val=entry.get(field_name, ""), allowed_values=None)
 
 
 class MainPostprocessor:
