@@ -136,10 +136,52 @@ class RequiredPrecisionPostprocessor(BasePostprocessor):
 class ProductShapePostprocessor(BasePostprocessor):
     ALLOWED_SHAPES = ["round", "angle", "plate", "others"]
 
-    def clean_dimension(self, val: str) -> str:
-        val = self.clean_value(val, "Dimension of object")
-        # You can add specific logic for validating/sanitizing dimension strings here
-        return val
+    def convert_phi_to_box(self, value: str, default_value: str = "0x0x0") -> str:
+        try:
+            value = value.replace("×", "x").replace(" ", "").strip()
+            value = re.sub(r"[\[\]{}()]", "", value)
+
+            if value.startswith("⌀"):
+                parts = value[1:].split("x")
+                if len(parts) == 2:
+                    d = float(parts[0])
+                    l = float(parts[1])
+                    return f"{d}x{d}x{l}"
+
+            if "x⌀" in value:
+                parts = value.split("x⌀")
+                if len(parts) == 2:
+                    l = float(parts[0])
+                    d = float(parts[1])
+                    return f"{l}x{d}x{d}"
+
+            return default_value
+        except Exception:
+            return default_value
+
+    def clean_dimension(self, value: str, default_value: str = "0x0x0") -> str:
+        try:
+            if not value:
+                return default_value
+            value = self.strip_wrappers(value)
+            value = value.replace("×", "x").replace(" ", "").strip()
+
+            # Attempt phi-style interpretation
+            phi_box = self.convert_phi_to_box(value)
+            if phi_box != default_value:
+                return phi_box
+
+            # Standard 3-component format
+            parts = value.split("x")
+            if len(parts) == 3 and all("⌀" not in p for p in parts):
+                float(parts[0])
+                float(parts[1])
+                float(parts[2])
+                return "x".join(parts)
+
+            return default_value
+        except Exception:
+            return default_value
 
     def run(self, entry: Dict) -> Dict:
         shape = (
@@ -239,7 +281,7 @@ if __name__ == "__main__":
         "Heat treatment": "MTB",
         "Surface treatment": "GC",
         "Shape of object": "round",
-        "Dimension of object": "",
+        "Dimension of object": "6.96x1.34x1.234",
         "Tolerance grade": "coarse grade",
         "Dimensional tolerance": "±0.09",
         "Polishing": "Yes",
